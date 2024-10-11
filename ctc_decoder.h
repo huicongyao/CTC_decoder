@@ -36,10 +36,13 @@ namespace Yao {
             empty_score.ns = -std::numeric_limits<float>::max();
             curr_hypo_[empty] = empty_score;
         }
-        void search(const std::vector<std::vector<float>> & logp, size_t beam_size = 32) ;
+        void search(const torch::Tensor & logp, size_t beam_size = 32) ;
+
+
         void display_hypo() const;
         void clear();
     private:
+        std::vector<std::vector<int>> batch_hypo;
         std::vector<std::vector<int>> hypotheses_;
         std::unordered_map<std::vector<int>, Yao::PrefixScore, Yao::utils::PrefixHash> curr_hypo_;
         std::vector<std::vector<int>> times_;
