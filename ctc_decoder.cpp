@@ -60,18 +60,18 @@ void Yao::CTC_Prefix_BeamSearch::search(const torch::Tensor &logp, size_t beam_s
                 hypotheses_.emplace_back(item.first);
             }
         }
+        batch_hypo.push_back(hypotheses_.front());
+        clear();
     }
 }
 
 void Yao::CTC_Prefix_BeamSearch::display_hypo() const {
-    for (const std::vector<int> & vec : hypotheses_) {
+    for (const std::vector<int> & vec : batch_hypo) {
         std::cout << "hypo: ";
         for (auto &id : vec) {
             std::cout << id << " ";
         }
-        std::cout << "score: " << curr_hypo_.at(vec).score();
         std::cout << std::endl;
-        break;
     }
 }
 

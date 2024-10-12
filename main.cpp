@@ -64,8 +64,8 @@ int main() {
     decoder.search(probs, beam_size);
     std::chrono::high_resolution_clock::time_point t4 = std::chrono::high_resolution_clock::now();
     std::cout << "ctc_decode_C: " << std::chrono::duration_cast<std::chrono::microseconds>(t4 - t3).count() << "us" << std::endl;
-//    decoder.display_hypo();
-    decoder.clear();
+    decoder.display_hypo();
+//    decoder.clear();
 
     return 0;
 }
