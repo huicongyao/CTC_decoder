@@ -1,18 +1,12 @@
 #include <vector>
-#include <unordered_map>
-#include <algorithm>
-#include <cmath>
-#include <limits>
 #include <iostream>
 #include <torch/torch.h>
 #include "ctc_decoder.h"
 #include "ctc_decode_C.h"
-#include <torch/torch.h>
-#include <iostream>
 #include <chrono>
 
 int main() {
-    int64_t N = 2, T = 3000, C = 5;
+    int64_t N = 10, T = 3000, C = 5;
     torch::manual_seed(0);
     torch::Tensor probs = torch::rand({T, N, C},torch::kFloat32);
     at::Tensor sum = torch::sum(probs, 2, true);
