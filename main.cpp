@@ -6,7 +6,7 @@
 #include <chrono>
 
 int main() {
-    int64_t N = 10, T = 3000, C = 5;
+    int64_t N = 10, T = 1200, C = 5;
     torch::manual_seed(0);
     torch::Tensor probs = torch::rand({T, N, C},torch::kFloat32);
     at::Tensor sum = torch::sum(probs, 2, true);
@@ -19,7 +19,7 @@ int main() {
     auto quals = torch::zeros({N, T}, torch::kUInt8);
 
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-    ctc_veterbi_decode(
+    ctc_greedy_decode(
             probs.data_ptr<float>(),
             seqs.data_ptr<uint8_t>(),
             moves.data_ptr<uint8_t>(),

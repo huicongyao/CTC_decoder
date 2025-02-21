@@ -12,12 +12,11 @@ uint8_t get_qual(float x) {
 }
 
 //extern "C" {
-    void ctc_veterbi_decode(float * inputs, uint8_t *seqs, uint8_t * moves, uint8_t * quals, int T, int N, int C) {
+    void ctc_greedy_decode(float * inputs, uint8_t *seqs, uint8_t * moves, uint8_t * quals, int T, int N, int C) {
 
         auto t1 = std::chrono::high_resolution_clock::now();
 
         torch::Tensor inputs_t = torch::from_blob(inputs, {T, N, C}, torch::kFloat32);
-//        std::cout << inputs_t << std::endl;
         auto t2 = std::chrono::high_resolution_clock::now();
         torch::Tensor soft_inputs = torch::exp(inputs_t).permute({1, 0, 2}).contiguous(); // T x N x C -> N x T x C
         torch::Tensor logits = soft_inputs.argmax(2).contiguous(); // N x T x C -> N x T
@@ -34,7 +33,6 @@ uint8_t get_qual(float x) {
                 moves[i * T + 0] = 1;
                 int64_t k = logits_ptr[i * T + 0];
                 quals[i * T + 0] = get_qual(soft_inputs_ptr[i * T * C + k]);
-//                quals[i * T + 0] = get_qual(soft_inputs_ptr[i * T * C + j * C + logits_ptr[i * T + 0]]);
             }
             for (int j = 1; j < T; j ++) {
                 if (logits_ptr[i * T + j] != 0 && \
@@ -43,7 +41,6 @@ uint8_t get_qual(float x) {
                     moves[i * T + j] = 1;
                     int64_t k = logits_ptr[i * T + j];
                     quals[i * T + j] = get_qual(soft_inputs_ptr[i * T * C + j * C + k]);
-//                    quals[i * T + j] = get_qual(soft_inputs_ptr[i * T * C + j * C + logits_ptr[i * T + j]]);
                 }
             }
         }

@@ -4,6 +4,19 @@
 
 #include "ctc_decoder.h"
 
+
+Yao::CTC_Prefix_BeamSearch::CTC_Prefix_BeamSearch() {
+    std::vector<int> empty;
+    PrefixScore empty_score;
+    empty_score.s = 0;
+    empty_score.ns = -std::numeric_limits<float>::max();
+    empty_score.v_s = 0;
+    empty_score.v_ns = 0;
+    curr_hypo_[empty] = empty_score;
+}
+
+
+
 // search for a batch of CTC inputs
 void Yao::CTC_Prefix_BeamSearch::search(const torch::Tensor &logp, size_t beam_size) {
 
@@ -25,21 +38,43 @@ void Yao::CTC_Prefix_BeamSearch::search(const torch::Tensor &logp, size_t beam_s
                         // Case 0: *a + ε => *a
                         PrefixScore &next_score = next_hyps[prefix];
                         next_score.s = Yao::utils::log_add(next_score.s, prefix_score.score() + prob);
+                        next_score.v_s = prefix_score.viterbi_score() + prob;
+                        next_score.times_s = prefix_score.times();
                     } else if (!prefix.empty() && id == prefix.back()) {
                         // Case 1: *a + a => *a
-                        PrefixScore &next_score = next_hyps[prefix];
-                        next_score.ns = Yao::utils::log_add(next_score.ns, prefix_score.ns + prob);
+                        PrefixScore &next_score1 = next_hyps[prefix];
+                        next_score1.ns = Yao::utils::log_add(next_score1.ns, prefix_score.ns + prob);
+                        if (next_score1.v_ns < prefix_score.v_ns + prob) {
+                            next_score1.v_ns = prefix_score.v_ns + prob;
+                            if (next_score1.curr_token_prob < prob) {
+                                next_score1.curr_token_prob = prob;
+                                next_score1.times_ns = prefix_score.times_ns;
+                                next_score1.times_ns.back() = t;
+                            }
+                        }
                         // Case 2: *aε + a => *aa
                         std::vector<int> new_prefix(prefix);
                         new_prefix.emplace_back(id);
                         PrefixScore &next_score2 = next_hyps[new_prefix];
                         next_score2.ns = Yao::utils::log_add(next_score2.ns, prefix_score.s + prob);
+                        if (next_score2.v_ns < prefix_score.v_s + prob) {
+                            next_score2.v_ns = prefix_score.v_s + prob;
+                            next_score2.curr_token_prob = prob;
+                            next_score2.times_ns = prefix_score.times_s;
+                            next_score2.times_ns.push_back(t);
+                        }
                     } else {
                         // Case 3: *a + b => *ab, *aε + b => *ab
                         std::vector<int> new_prefix(prefix);
                         new_prefix.emplace_back(id);
                         PrefixScore &next_score = next_hyps[new_prefix];
                         next_score.ns = Yao::utils::log_add(next_score.ns, prefix_score.score() + prob);
+                        if (next_score.v_ns < prefix_score.viterbi_score() + prob) {
+                            next_score.v_ns = prefix_score.viterbi_score() + prob;
+                            next_score.curr_token_prob = prob;
+                            next_score.times_ns = prefix_score.times();
+                            next_score.times_ns.push_back(t);
+                        }
                     }
                 }
             }
@@ -78,9 +113,10 @@ void Yao::CTC_Prefix_BeamSearch::display_hypo() const {
 void Yao::CTC_Prefix_BeamSearch::clear() {
     hypotheses_.clear();
     curr_hypo_.clear();
-    PrefixScore empty_score;
+    PrefixScore &empty_score = curr_hypo_[std::vector<int>()];
     empty_score.s = 0;
     empty_score.ns = -std::numeric_limits<float>::max();
-    curr_hypo_[std::vector<int>()] = empty_score;
+    empty_score.v_s = 0;
+    empty_score.v_ns = 0;
 }
 

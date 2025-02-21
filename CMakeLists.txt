@@ -5,14 +5,14 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
     message(STATUS "CMAKE_BUILD_TYPE = Debug")
 else ()
-    set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+    set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O2 ")
     message(STATUS "CMAKE_BUILD_TYPE = Release")
 endif ()
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.4/bin/nvcc)
 set(CMAKE_PREFIX_PATH /home/yaohc/miniconda3/envs/Torch2.0/lib/python3.9/site-packages/torch/share/cmake)
 find_package(Torch REQUIRED)
-#find_package(ZLIB REQUIRED)
 find_package(spdlog REQUIRED)
 
 

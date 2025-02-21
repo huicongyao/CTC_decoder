@@ -15,11 +15,27 @@ namespace Yao {
     struct PrefixScore {
         float s = -std::numeric_limits<float>::max();       // blank ending score
         float ns = -std::numeric_limits<float>::max();      // none blank ending score
+        float v_s = -std::numeric_limits<float>::max();
+        float v_ns = -std::numeric_limits<float>::max();
+        float curr_token_prob = -std::numeric_limits<float>::max();
+        std::vector<int> times_s;
+        std::vector<int> times_ns;
         float time_step = 0;
         float score() const {
             return Yao::utils::log_add(s, ns);
         }
+        float viterbi_score() const {
+            return v_s > v_ns ? v_s : v_ns;
+        }
+        const std::vector<int>& times() const {
+            return v_s > v_ns ? times_s : times_ns;
+        }
+
     };
+
+    std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> ctc_viterbi_decode (
+            torch::Tensor & logp
+        );
 
     static bool PrefixScoreCompare(
             const std::pair<std::vector<int>, PrefixScore> & a,
@@ -29,13 +45,7 @@ namespace Yao {
 
     class CTC_Prefix_BeamSearch {
     public:
-        CTC_Prefix_BeamSearch() {
-            std::vector<int> empty;
-            PrefixScore empty_score;
-            empty_score.s = 0;
-            empty_score.ns = -std::numeric_limits<float>::max();
-            curr_hypo_[empty] = empty_score;
-        }
+        CTC_Prefix_BeamSearch();
         void search(const torch::Tensor & logp, size_t beam_size = 32) ;
 
 
